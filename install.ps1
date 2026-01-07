@@ -6,64 +6,68 @@ param(
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
 $ErrorActionPreference = "Stop"
 
 trap {
-    Write-Host "===========================" -ForegroundColor Red
     Write-Host "ERROR:" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
-    Write-Host "Line: $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Yellow
     Write-Host $_.InvocationInfo.Line -ForegroundColor Yellow
-    Write-Host "===========================" -ForegroundColor Red
     Read-Host "Press Enter to exit"
     exit 1
 }
 
-function Info($msg) { Write-Host "[INFO] " -ForegroundColor Cyan -NoNewline; Write-Host $msg }
-function Ok($msg)   { Write-Host "[OK] " -ForegroundColor Green -NoNewline; Write-Host $msg }
-function Warn($msg) { Write-Host "[!] " -ForegroundColor Yellow -NoNewline; Write-Host $msg }
-function Err($msg)  { Write-Host "[X] " -ForegroundColor Red -NoNewline; Write-Host $msg }
+function Info($t){ Write-Host "[INFO] $t" -ForegroundColor Cyan }
+function Ok($t){ Write-Host "[OK] $t" -ForegroundColor Green }
+function Err($t){ Write-Host "[ERROR] $t" -ForegroundColor Red }
 
 Clear-Host
-Write-Host "================================================" -ForegroundColor Blue
-Write-Host "            EasyPrinter Installation            " -ForegroundColor White
-Write-Host "            HP LaserJet M1536dnf MFP            " -ForegroundColor Gray
-Write-Host "================================================" -ForegroundColor Blue
-Write-Host ""
-
 Info "Checking system..."
 
-if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Err "Script must be run as Administrator"
-    Read-Host "Press Enter to exit"
+$admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+    [Security.Principal.WindowsBuiltInRole]::Administrator
+)
+
+if (-not $admin) {
+    Err "Run PowerShell as Administrator"
     exit 1
 }
 
 Info "Checking .NET 6 Desktop Runtime..."
 
-$dotnet = Get-ChildItem "HKLM:\SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedhost" -ErrorAction SilentlyContinue
-if (-not $dotnet) {
-    Info ".NET 6 Runtime not found. Installing..."
-    $dotnetUrl = "https://download.visualstudio.microsoft.com/download/pr/3c5b2d1a-5c0f-4f9e-9a1e-4d1b0d0a6f4f/2c3e4e5d6f7a8b9c0d1e2f3a4b5c6d7e/windowsdesktop-runtime-6.0.25-win-x64.exe"
-    $dotnetInstaller = "$env:TEMP\dotnet6.exe"
-    Info "Downloading .NET 6 Runtime..."
-    Invoke-WebRequest $dotnetUrl -OutFile $dotnetInstaller
-    Info "Running installer..."
+$dotnetOk = $false
+$dotnetList = & dotnet --list-runtimes 2>$null
+if ($dotnetList) {
+    foreach ($line in $dotnetList) {
+        if ($line -match "^Microsoft.WindowsDesktop.App 6\.") {
+            $dotnetOk = $true
+            break
+        }
+    }
+}
+
+if (-not $dotnetOk) {
+    Info ".NET 6 Desktop Runtime not found"
+    $dotnetUrl = "https://aka.ms/dotnet/6.0/windowsdesktop-runtime-win-x64.exe"
+    $dotnetInstaller = "$env:TEMP\windowsdesktop-runtime-6.exe"
+    Info "Downloading .NET 6 Desktop Runtime..."
+    Invoke-WebRequest -Uri $dotnetUrl -OutFile $dotnetInstaller
+    Info "Installing .NET 6 Desktop Runtime..."
     Start-Process $dotnetInstaller -ArgumentList "/install /quiet /norestart" -Wait
     Remove-Item $dotnetInstaller -Force
-    Ok ".NET 6 Runtime installed"
+    Ok ".NET 6 Desktop Runtime installed"
 } else {
-    Ok ".NET 6 Runtime already installed"
+    Ok ".NET 6 Desktop Runtime already installed"
 }
 
 Info "Checking Git..."
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    Info "Git not found. Installing..."
-    $gitUrl = "https://github.com/git-for-windows/git/releases/latest/download/Git-2.44.0-64-bit.exe"
+    Info "Git not found"
+    $gitUrl = "https://github.com/git-for-windows/git/releases/latest/download/Git-64-bit.exe"
     $gitInstaller = "$env:TEMP\git.exe"
-    Invoke-WebRequest $gitUrl -OutFile $gitInstaller
+    Info "Downloading Git..."
+    Invoke-WebRequest -Uri $gitUrl -OutFile $gitInstaller
+    Info "Installing Git..."
     Start-Process $gitInstaller -ArgumentList "/VERYSILENT /NORESTART" -Wait
     Remove-Item $gitInstaller -Force
     Ok "Git installed"
@@ -71,14 +75,12 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Ok "Git already installed"
 }
 
-Info "Preparing source code..."
+Info "Preparing source directory..."
 
 if (Test-Path $SourcePath) {
     Set-Location $SourcePath
-    Info "Updating existing repository..."
     git pull
 } else {
-    Info "Cloning repository..."
     git clone $RepoUrl $SourcePath
     Set-Location $SourcePath
 }
@@ -90,45 +92,35 @@ if (Test-Path $publishPath) {
     Remove-Item $publishPath -Recurse -Force
 }
 
-Info "Restoring NuGet packages..."
 dotnet restore
-
-Info "Compiling..."
 dotnet publish -c Release -r win-x64 --self-contained false -o $publishPath
 
-Ok "Build completed"
+$exePath = "$publishPath\EasyPrinter.exe"
+if (-not (Test-Path $exePath)) {
+    Err "Build failed: EasyPrinter.exe not found"
+    exit 1
+}
 
 Info "Creating shortcuts..."
 
-$exePath = "$publishPath\EasyPrinter.exe"
+$wsh = New-Object -ComObject WScript.Shell
 $desktop = [Environment]::GetFolderPath("Desktop")
 $startMenu = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs"
 
-$wsh = New-Object -ComObject WScript.Shell
+$s1 = $wsh.CreateShortcut("$desktop\EasyPrinter.lnk")
+$s1.TargetPath = $exePath
+$s1.WorkingDirectory = $publishPath
+$s1.Save()
 
-$desktopShortcut = $wsh.CreateShortcut("$desktop\EasyPrinter.lnk")
-$desktopShortcut.TargetPath = $exePath
-$desktopShortcut.WorkingDirectory = $publishPath
-$desktopShortcut.Save()
+$s2 = $wsh.CreateShortcut("$startMenu\EasyPrinter.lnk")
+$s2.TargetPath = $exePath
+$s2.WorkingDirectory = $publishPath
+$s2.Save()
 
-$menuShortcut = $wsh.CreateShortcut("$startMenu\EasyPrinter.lnk")
-$menuShortcut.TargetPath = $exePath
-$menuShortcut.WorkingDirectory = $publishPath
-$menuShortcut.Save()
+Ok "Installation completed"
 
-Ok "Shortcuts created"
-
-Write-Host ""
-Write-Host "================================================" -ForegroundColor Green
-Write-Host "           Installation Completed!              " -ForegroundColor White
-Write-Host "================================================" -ForegroundColor Green
-Write-Host ""
-Write-Host "Installed to: $InstallPath" -ForegroundColor Cyan
-Write-Host "Source code:  $SourcePath" -ForegroundColor Cyan
-Write-Host ""
-
-$response = Read-Host "Launch EasyPrinter now? (Y/N)"
-if ($response -match "^[Yy]$") {
+$run = Read-Host "Launch EasyPrinter now? (Y/N)"
+if ($run -match "^[Yy]$") {
     Start-Process $exePath
 }
 
