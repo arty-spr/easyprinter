@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Resources\printer.ico</ApplicationIcon>
+    <AssemblyName>EasyPrinter</AssemblyName>
+    <RootNamespace>EasyPrinter</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>EasyPrinter</Authors>
+    <Description>Простое приложение для управления HP LaserJet M1536dnf MFP</Description>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- MVVM Toolkit -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+
+    <!-- PDF создание -->
+    <PackageReference Include="PDFsharp" Version="6.2.3" />
+
+    <!-- PDF просмотр -->
+    <PackageReference Include="PdfiumViewer" Version="2.13.0" />
+    <PackageReference Include="PdfiumViewer.Native.x64.v8-xfa" Version="2018.4.8.256" />
+
+    <!-- Сканирование через WIA -->
+    <PackageReference Include="NAPS2.Sdk" Version="1.2.1" />
+    <PackageReference Include="NAPS2.Sdk.Worker.Win64" Version="1.2.1" />
+
+    <!-- Работа с изображениями -->
+    <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
+
+    <!-- Диалог выбора папки -->
+    <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
+
+    <!-- WMI для получения статуса принтера -->
+    <PackageReference Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\*.ico" />
+    <Resource Include="Resources\*.png" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,104 @@
+<Page x:Class="EasyPrinter.Views.HomePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Главная"
+      Background="{StaticResource BackgroundBrush}">
+
+    <Grid>
+        <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+
+            <!-- Заголовок -->
+            <TextBlock Text="EasyPrinter"
+                       Style="{StaticResource TitleStyle}"
+                       HorizontalAlignment="Center"
+                       FontSize="48"
+                       Margin="0,0,0,20"/>
+
+            <TextBlock Text="Управление принтером HP LaserJet M1536dnf"
+                       Style="{StaticResource NormalTextStyle}"
+                       HorizontalAlignment="Center"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Margin="0,0,0,40"/>
+
+            <!-- Кнопки навигации (2x2) -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Печать -->
+                <Button Grid.Row="0" Grid.Column="0"
+                        Style="{StaticResource MainNavButtonStyle}"
+                        Click="PrintButton_Click"
+                        ToolTip="Печать документов">
+                    <StackPanel>
+                        <TextBlock Text="&#128424;"
+                                   FontSize="{StaticResource FontSizeIcon}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="ПЕЧАТЬ"
+                                   FontSize="{StaticResource FontSizeLarge}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Сканирование -->
+                <Button Grid.Row="0" Grid.Column="1"
+                        Style="{StaticResource MainNavButtonStyle}"
+                        Background="#4CAF50"
+                        Click="ScanButton_Click"
+                        ToolTip="Сканирование документов">
+                    <StackPanel>
+                        <TextBlock Text="&#128196;"
+                                   FontSize="{StaticResource FontSizeIcon}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="СКАН"
+                                   FontSize="{StaticResource FontSizeLarge}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Копирование -->
+                <Button Grid.Row="1" Grid.Column="0"
+                        Style="{StaticResource MainNavButtonStyle}"
+                        Background="#FF9800"
+                        Click="CopyButton_Click"
+                        ToolTip="Копирование документов">
+                    <StackPanel>
+                        <TextBlock Text="&#128203;"
+                                   FontSize="{StaticResource FontSizeIcon}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="КОПИЯ"
+                                   FontSize="{StaticResource FontSizeLarge}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Статус -->
+                <Button Grid.Row="1" Grid.Column="1"
+                        Style="{StaticResource MainNavButtonStyle}"
+                        Background="#9C27B0"
+                        Click="StatusButton_Click"
+                        ToolTip="Статус принтера">
+                    <StackPanel>
+                        <TextBlock Text="&#8505;"
+                                   FontSize="{StaticResource FontSizeIcon}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="СТАТУС"
+                                   FontSize="{StaticResource FontSizeLarge}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </StackPanel>
+    </Grid>
+</Page>

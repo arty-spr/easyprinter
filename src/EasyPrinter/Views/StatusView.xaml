@@ -1,0 +1,237 @@
+<Page x:Class="EasyPrinter.Views.StatusView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Статус принтера"
+      Background="{StaticResource BackgroundBrush}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Button Style="{StaticResource BackButtonStyle}"
+                    HorizontalAlignment="Left"
+                    Click="BackButton_Click"/>
+            <TextBlock Text="СТАТУС ПРИНТЕРА"
+                       Style="{StaticResource TitleStyle}"
+                       HorizontalAlignment="Center"/>
+            <Button Content="Обновить"
+                    Style="{StaticResource ActionButtonStyle}"
+                    Width="150"
+                    HorizontalAlignment="Right"
+                    Click="RefreshButton_Click"/>
+        </Grid>
+
+        <!-- Основной контент -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Левая колонка: Статус принтера -->
+            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                <!-- Общий статус -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Большой индикатор статуса -->
+                        <Ellipse x:Name="StatusIndicator"
+                                 Grid.Column="0"
+                                 Width="80" Height="80"
+                                 Fill="{StaticResource SuccessBrush}"
+                                 Margin="0,0,25,0"/>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock x:Name="PrinterNameText"
+                                       Text="HP LaserJet M1536dnf MFP"
+                                       Style="{StaticResource SubtitleStyle}"/>
+                            <TextBlock x:Name="StatusText"
+                                       Text="Готов к работе"
+                                       Style="{StaticResource NormalTextStyle}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Уровень тонера -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="Тонер HP 78A"
+                                   Style="{StaticResource SubtitleStyle}"/>
+
+                        <Grid Margin="0,15,0,10">
+                            <ProgressBar x:Name="TonerProgressBar"
+                                         Height="40"
+                                         Value="75"
+                                         Maximum="100"
+                                         Foreground="{StaticResource SuccessBrush}"
+                                         Background="#E0E0E0"/>
+                            <TextBlock x:Name="TonerPercentText"
+                                       Text="75%"
+                                       FontSize="{StaticResource FontSizeLarge}"
+                                       FontWeight="Bold"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <TextBlock x:Name="TonerStatusText"
+                                   Text="Уровень тонера в норме"
+                                   Style="{StaticResource NormalTextStyle}"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Информация о принтере -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Информация"
+                                   Style="{StaticResource SubtitleStyle}"/>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                       Text="Модель:"
+                                       Style="{StaticResource LabelStyle}"
+                                       Margin="0,0,20,5"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1"
+                                       Text="HP LaserJet Pro M1536dnf MFP"
+                                       Style="{StaticResource NormalTextStyle}"
+                                       Margin="0,0,0,5"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                       Text="Тип:"
+                                       Style="{StaticResource LabelStyle}"
+                                       Margin="0,0,20,5"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1"
+                                       Text="Ч/Б лазерное МФУ"
+                                       Style="{StaticResource NormalTextStyle}"
+                                       Margin="0,0,0,5"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0"
+                                       Text="Подключение:"
+                                       Style="{StaticResource LabelStyle}"
+                                       Margin="0,0,20,5"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1"
+                                       Text="USB"
+                                       Style="{StaticResource NormalTextStyle}"
+                                       Margin="0,0,0,5"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0"
+                                       Text="Скорость:"
+                                       Style="{StaticResource LabelStyle}"
+                                       Margin="0,0,20,5"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1"
+                                       Text="До 26 стр/мин"
+                                       Style="{StaticResource NormalTextStyle}"
+                                       Margin="0,0,0,5"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0"
+                                       Text="Разрешение:"
+                                       Style="{StaticResource LabelStyle}"
+                                       Margin="0,0,20,0"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1"
+                                       Text="600x600 dpi (FastRes 1200)"
+                                       Style="{StaticResource NormalTextStyle}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Правая колонка: Очередь печати -->
+            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="10,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Text="Очередь печати"
+                               Style="{StaticResource SubtitleStyle}"/>
+
+                    <!-- Список заданий -->
+                    <ListView x:Name="PrintQueueListView"
+                              Grid.Row="1"
+                              Margin="0,15,0,0"
+                              BorderThickness="0"
+                              Background="Transparent">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding DocumentName}"
+                                                   FontSize="{StaticResource FontSizeNormal}"
+                                                   FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Status}"
+                                                   FontSize="{StaticResource FontSizeSmall}"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Pages}"
+                                               FontSize="{StaticResource FontSizeNormal}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <!-- Пустая очередь -->
+                    <StackPanel x:Name="EmptyQueuePanel"
+                                Grid.Row="1"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center">
+                        <TextBlock Text="&#128196;"
+                                   FontSize="60"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="Очередь печати пуста"
+                                   Style="{StaticResource NormalTextStyle}"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,15,0,0"/>
+                    </StackPanel>
+
+                    <!-- Кнопки управления очередью -->
+                    <StackPanel Grid.Row="2"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="0,15,0,0">
+                        <Button Content="Очистить очередь"
+                                Style="{StaticResource ActionButtonStyle}"
+                                Background="#F44336"
+                                Width="200"
+                                Click="ClearQueueButton_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>
