@@ -1,13 +1,32 @@
 #Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    Установочный скрипт для EasyPrinter
+    EasyPrinter Installer Script
 .DESCRIPTION
-    Скрипт устанавливает все необходимые зависимости и собирает приложение EasyPrinter
-    для управления HP LaserJet M1536dnf MFP
+    Installs dependencies, downloads source code, builds the EasyPrinter app,
+    and creates shortcuts for HP LaserJet M1536dnf MFP control panel.
 .NOTES
-    Требуется запуск от имени администратора
+    Must be run as Administrator.
 #>
+
+# Fix UTF-8 output
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# Ensure TLS 1.2
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+trap {
+    Write-Host ""
+    Write-Host "========== ERROR ==========" -ForegroundColor Red
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    Write-Host "Line: $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Yellow
+    Write-Host $_.InvocationInfo.Line -ForegroundColor Yellow
+    Write-Host "===========================" -ForegroundColor Red
+    Read-Host "Press Enter to exit"
+    exit 1
+}
+
+$ErrorActionPreference = "Stop"
 
 param(
     [string]$InstallPath = "C:\Program Files\EasyPrinter",
@@ -15,222 +34,177 @@ param(
     [string]$RepoUrl = "https://github.com/arty-spr/easyprinter.git"
 )
 
-# Цвета для вывода
-function Write-ColorOutput($ForegroundColor) {
-    $fc = $host.UI.RawUI.ForegroundColor
-    $host.UI.RawUI.ForegroundColor = $ForegroundColor
-    if ($args) {
-        Write-Output $args
-    }
-    $host.UI.RawUI.ForegroundColor = $fc
-}
+function Info($msg) { Write-Host "[INFO] " -ForegroundColor Cyan -NoNewline; Write-Host $msg }
+function Ok($msg)   { Write-Host "[OK] "   -ForegroundColor Green -NoNewline; Write-Host $msg }
+function Warn($msg) { Write-Host "[!] "    -ForegroundColor Yellow -NoNewline; Write-Host $msg }
+function Err($msg)  { Write-Host "[X] "    -ForegroundColor Red -NoNewline; Write-Host $msg }
 
-function Write-Success($message) {
-    Write-Host "[OK] " -ForegroundColor Green -NoNewline
-    Write-Host $message
-}
-
-function Write-Info($message) {
-    Write-Host "[INFO] " -ForegroundColor Cyan -NoNewline
-    Write-Host $message
-}
-
-function Write-Warning($message) {
-    Write-Host "[!] " -ForegroundColor Yellow -NoNewline
-    Write-Host $message
-}
-
-function Write-Error($message) {
-    Write-Host "[X] " -ForegroundColor Red -NoNewline
-    Write-Host $message
-}
-
-# Баннер
 Clear-Host
 Write-Host "================================================" -ForegroundColor Blue
-Write-Host "      EasyPrinter - Установка" -ForegroundColor White
-Write-Host "      HP LaserJet M1536dnf MFP" -ForegroundColor Gray
+Write-Host "            EasyPrinter Installation            " -ForegroundColor White
+Write-Host "            HP LaserJet M1536dnf MFP            " -ForegroundColor Gray
 Write-Host "================================================" -ForegroundColor Blue
 Write-Host ""
 
-# 1. Проверка версии Windows
-Write-Info "Проверка системы..."
+# 1. System check
+Info "Checking system..."
 $os = Get-CimInstance Win32_OperatingSystem
 $arch = (Get-CimInstance Win32_Processor).AddressWidth
 
 if ($arch -ne 64) {
-    Write-Error "Требуется 64-битная версия Windows"
+    Err "64-bit Windows is required"
     exit 1
 }
 
 $winVersion = [System.Environment]::OSVersion.Version
 if ($winVersion.Major -lt 10) {
-    Write-Error "Требуется Windows 10 или новее"
+    Err "Windows 10 or newer is required"
     exit 1
 }
 
-Write-Success "Windows $($os.Caption) x64"
+Ok "Windows detected: $($os.Caption) x64"
 
-# 2. Проверка/установка .NET 6 Runtime
-Write-Info "Проверка .NET 6 Desktop Runtime..."
+# 2. Check .NET 6 Desktop Runtime
+Info "Checking .NET 6 Desktop Runtime..."
 $dotnetInstalled = $false
 
 try {
     $runtimes = & dotnet --list-runtimes 2>$null
     if ($runtimes -match "Microsoft.WindowsDesktop.App 6\.") {
         $dotnetInstalled = $true
-        Write-Success ".NET 6 Desktop Runtime уже установлен"
+        Ok ".NET 6 Desktop Runtime is already installed"
     }
-} catch {
-    # dotnet не найден
-}
+} catch {}
 
 if (-not $dotnetInstalled) {
-    Write-Info "Установка .NET 6 Desktop Runtime..."
+    Info ".NET 6 Runtime not found. Installing..."
 
-    $dotnetUrl = "https://download.visualstudio.microsoft.com/download/pr/513d13b7-b456-45af-828b-b7b7981ff462/edf44a743b78f8b54a2cec97ce888346/windowsdesktop-runtime-6.0.33-win-x64.exe"
+    $dotnetUrl = "https://dotnetcli.azureedge.net/dotnet/WindowsDesktop/6.0.33/windowsdesktop-runtime-6.0.33-win-x64.exe"
     $dotnetInstaller = "$env:TEMP\dotnet6-runtime.exe"
 
     try {
-        Write-Info "Загрузка .NET 6 Runtime..."
-        Invoke-WebRequest -Uri $dotnetUrl -OutFile $dotnetInstaller -UseBasicParsing
+        Info "Downloading .NET 6 Runtime..."
+        Invoke-WebRequest -Uri $dotnetUrl -OutFile $dotnetInstaller
 
-        Write-Info "Запуск установщика..."
+        Info "Running installer..."
         Start-Process -FilePath $dotnetInstaller -ArgumentList "/install /quiet /norestart" -Wait
 
         Remove-Item $dotnetInstaller -Force
-        Write-Success ".NET 6 Desktop Runtime установлен"
+        Ok ".NET 6 Desktop Runtime installed"
     } catch {
-        Write-Error "Не удалось установить .NET 6 Runtime: $_"
-        Write-Warning "Пожалуйста, установите вручную: https://dotnet.microsoft.com/download/dotnet/6.0"
+        Err "Failed to install .NET 6 Runtime: $_"
+        Warn "Install manually: https://dotnet.microsoft.com/download/dotnet/6.0"
         exit 1
     }
 }
 
-# 3. Проверка Git
-Write-Info "Проверка Git..."
-$gitInstalled = $false
-
+# 3. Check Git
+Info "Checking Git..."
 try {
     $gitVersion = & git --version 2>$null
     if ($gitVersion) {
-        $gitInstalled = $true
-        Write-Success "Git установлен: $gitVersion"
+        Ok "Git installed: $gitVersion"
     }
 } catch {
-    # Git не найден
-}
-
-if (-not $gitInstalled) {
-    Write-Error "Git не установлен!"
-    Write-Warning "Пожалуйста, установите Git: https://git-scm.com/download/win"
+    Err "Git is not installed!"
+    Warn "Install Git: https://git-scm.com/download/win"
     exit 1
 }
 
-# 4. Клонирование репозитория
-Write-Info "Подготовка исходного кода..."
+# 4. Clone or update repo
+Info "Preparing source code..."
 
 if (Test-Path $SourcePath) {
-    Write-Info "Папка уже существует, обновляем..."
+    Info "Updating existing repository..."
     Push-Location $SourcePath
     & git pull origin main
     Pop-Location
 } else {
-    Write-Info "Клонирование репозитория..."
+    Info "Cloning repository..."
     & git clone $RepoUrl $SourcePath
 
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "Не удалось клонировать репозиторий"
+        Err "Failed to clone the repository"
         exit 1
     }
 }
 
-Write-Success "Исходный код готов"
+Ok "Source code ready"
 
-# 5. Сборка приложения
-Write-Info "Сборка приложения..."
+# 5. Build app
+Info "Building application..."
 
 $projectPath = Join-Path $SourcePath "src\EasyPrinter\EasyPrinter.csproj"
 
 if (-not (Test-Path $projectPath)) {
-    Write-Error "Файл проекта не найден: $projectPath"
+    Err "Project file not found: $projectPath"
     exit 1
 }
 
 Push-Location (Join-Path $SourcePath "src\EasyPrinter")
 
 try {
-    # Восстанавливаем зависимости
-    Write-Info "Восстановление NuGet пакетов..."
+    Info "Restoring NuGet packages..."
     & dotnet restore
+    if ($LASTEXITCODE -ne 0) { throw "Package restore failed" }
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "Ошибка восстановления пакетов"
-    }
-
-    # Собираем приложение
-    Write-Info "Компиляция..."
+    Info "Compiling..."
     & dotnet publish -c Release -o $InstallPath --self-contained false
+    if ($LASTEXITCODE -ne 0) { throw "Build failed" }
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "Ошибка сборки"
-    }
-
-    Write-Success "Приложение собрано"
+    Ok "Application built successfully"
 } catch {
-    Write-Error "Ошибка сборки: $_"
+    Err "Build error: $_"
     Pop-Location
     exit 1
 }
 
 Pop-Location
 
-# 6. Создание ярлыка на рабочем столе
-Write-Info "Создание ярлыка на рабочем столе..."
+# 6. Desktop shortcut
+Info "Creating desktop shortcut..."
 
-$desktopPath = [Environment]::GetFolderPath("CommonDesktopDirectory")
-$shortcutPath = Join-Path $desktopPath "EasyPrinter.lnk"
+$desktop = [Environment]::GetFolderPath("CommonDesktopDirectory")
+$shortcutPath = Join-Path $desktop "EasyPrinter.lnk"
 $exePath = Join-Path $InstallPath "EasyPrinter.exe"
 
 $shell = New-Object -ComObject WScript.Shell
 $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $exePath
 $shortcut.WorkingDirectory = $InstallPath
-$shortcut.Description = "Управление HP LaserJet M1536dnf MFP"
+$shortcut.Description = "EasyPrinter Control Panel"
 $shortcut.Save()
 
-Write-Success "Ярлык создан на рабочем столе"
+Ok "Desktop shortcut created"
 
-# 7. Создание ярлыка для обновления
-Write-Info "Создание ярлыка для обновления..."
+# 7. Update shortcut
+Info "Creating update shortcut..."
 
-$updateShortcutPath = Join-Path $InstallPath "Обновить EasyPrinter.lnk"
+$updateShortcut = Join-Path $InstallPath "Update EasyPrinter.lnk"
 $updateScript = Join-Path $SourcePath "update.ps1"
 
-$shortcut2 = $shell.CreateShortcut($updateShortcutPath)
+$shortcut2 = $shell.CreateShortcut($updateShortcut)
 $shortcut2.TargetPath = "powershell.exe"
 $shortcut2.Arguments = "-ExecutionPolicy Bypass -File `"$updateScript`""
 $shortcut2.WorkingDirectory = $SourcePath
-$shortcut2.Description = "Обновить EasyPrinter"
+$shortcut2.Description = "Update EasyPrinter"
 $shortcut2.Save()
 
-Write-Success "Ярлык для обновления создан"
+Ok "Update shortcut created"
 
-# Завершение
+# Finish
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Green
-Write-Host "      Установка завершена!" -ForegroundColor White
+Write-Host "           Installation Completed!              " -ForegroundColor White
 Write-Host "================================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "Приложение установлено в: $InstallPath" -ForegroundColor Cyan
-Write-Host "Исходный код: $SourcePath" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Для запуска используйте ярлык на рабочем столе" -ForegroundColor Yellow
-Write-Host "Для обновления запустите: $updateScript" -ForegroundColor Yellow
+Write-Host "Installed to: $InstallPath" -ForegroundColor Cyan
+Write-Host "Source code:  $SourcePath" -ForegroundColor Cyan
 Write-Host ""
 
-# Запрос на запуск приложения
-$response = Read-Host "Запустить EasyPrinter сейчас? (Y/N)"
-if ($response -eq "Y" -or $response -eq "y") {
+$response = Read-Host "Launch EasyPrinter now? (Y/N)"
+if ($response -match "^[Yy]$") {
     Start-Process $exePath
 }
+
+Read-Host "Press Enter to exit"

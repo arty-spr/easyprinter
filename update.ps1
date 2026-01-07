@@ -1,9 +1,21 @@
 <#
 .SYNOPSIS
-    Скрипт обновления EasyPrinter
+    Update script for EasyPrinter
 .DESCRIPTION
-    Скачивает последнюю версию из Git и пересобирает приложение
+    Downloads latest version from Git and rebuilds the application
 #>
+
+# Global error handler
+trap {
+    Write-Host ""
+    Write-Host "========== ERROR ==========" -ForegroundColor Red
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    Write-Host "===========================" -ForegroundColor Red
+    Read-Host "Press Enter to exit"
+    exit 1
+}
+
+$ErrorActionPreference = "Stop"
 
 param(
     [string]$InstallPath = "C:\Program Files\EasyPrinter",
@@ -20,108 +32,110 @@ function Write-Info($message) {
     Write-Host $message
 }
 
-function Write-Error($message) {
+function Write-Err($message) {
     Write-Host "[X] " -ForegroundColor Red -NoNewline
     Write-Host $message
 }
 
-# Баннер
+# Banner
 Clear-Host
 Write-Host "================================================" -ForegroundColor Blue
-Write-Host "      EasyPrinter - Обновление" -ForegroundColor White
+Write-Host "      EasyPrinter - Update" -ForegroundColor White
 Write-Host "================================================" -ForegroundColor Blue
 Write-Host ""
 
-# Проверка наличия исходного кода
+# Check source folder
 if (-not (Test-Path $SourcePath)) {
-    Write-Error "Исходный код не найден: $SourcePath"
-    Write-Host "Пожалуйста, сначала запустите install.ps1"
-    Read-Host "Нажмите Enter для выхода"
+    Write-Err "Source code not found: $SourcePath"
+    Write-Host "Please run install.ps1 first"
+    Read-Host "Press Enter to exit"
     exit 1
 }
 
-# 1. Закрытие EasyPrinter если запущен
-Write-Info "Проверка запущенных процессов..."
+# 1. Close EasyPrinter if running
+Write-Info "Checking running processes..."
 
 $process = Get-Process -Name "EasyPrinter" -ErrorAction SilentlyContinue
 if ($process) {
-    Write-Info "Закрытие EasyPrinter..."
+    Write-Info "Closing EasyPrinter..."
     $process | Stop-Process -Force
     Start-Sleep -Seconds 2
-    Write-Success "EasyPrinter закрыт"
+    Write-Success "EasyPrinter closed"
 }
 
-# 2. Обновление из Git
-Write-Info "Получение обновлений из Git..."
+# 2. Update from Git
+Write-Info "Getting updates from Git..."
 
 Push-Location $SourcePath
 
 try {
-    # Сбрасываем локальные изменения
+    # Reset local changes
     & git reset --hard HEAD
     & git clean -fd
 
-    # Получаем обновления
+    # Pull updates
     $output = & git pull origin main 2>&1
 
     if ($LASTEXITCODE -ne 0) {
-        throw "Ошибка git pull: $output"
+        throw "git pull error: $output"
     }
 
     if ($output -match "Already up to date") {
-        Write-Success "Уже установлена последняя версия"
+        Write-Success "Already up to date"
     } else {
-        Write-Success "Обновления загружены"
+        Write-Success "Updates downloaded"
     }
 } catch {
-    Write-Error "Ошибка обновления: $_"
+    Write-Err "Update error: $_"
     Pop-Location
-    Read-Host "Нажмите Enter для выхода"
+    Read-Host "Press Enter to exit"
     exit 1
 }
 
-# 3. Пересборка приложения
-Write-Info "Пересборка приложения..."
+# 3. Rebuild application
+Write-Info "Rebuilding application..."
 
 Push-Location (Join-Path $SourcePath "src\EasyPrinter")
 
 try {
-    # Восстанавливаем зависимости
+    # Restore dependencies
     & dotnet restore
 
     if ($LASTEXITCODE -ne 0) {
-        throw "Ошибка восстановления пакетов"
+        throw "Failed to restore packages"
     }
 
-    # Собираем приложение
+    # Build application
     & dotnet publish -c Release -o $InstallPath --self-contained false
 
     if ($LASTEXITCODE -ne 0) {
-        throw "Ошибка сборки"
+        throw "Build failed"
     }
 
-    Write-Success "Приложение обновлено"
+    Write-Success "Application updated"
 } catch {
-    Write-Error "Ошибка сборки: $_"
+    Write-Err "Build error: $_"
     Pop-Location
     Pop-Location
-    Read-Host "Нажмите Enter для выхода"
+    Read-Host "Press Enter to exit"
     exit 1
 }
 
 Pop-Location
 Pop-Location
 
-# Завершение
+# Completion
 Write-Host ""
 Write-Host "================================================" -ForegroundColor Green
-Write-Host "      Обновление завершено!" -ForegroundColor White
+Write-Host "      Update complete!" -ForegroundColor White
 Write-Host "================================================" -ForegroundColor Green
 Write-Host ""
 
-# Запрос на запуск приложения
+# Ask to launch
 $exePath = Join-Path $InstallPath "EasyPrinter.exe"
-$response = Read-Host "Запустить EasyPrinter сейчас? (Y/N)"
+$response = Read-Host "Launch EasyPrinter now? (Y/N)"
 if ($response -eq "Y" -or $response -eq "y") {
     Start-Process $exePath
 }
+
+Read-Host "Press Enter to exit"
