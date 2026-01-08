@@ -123,8 +123,8 @@ class CopyView(QWidget):
         content_layout.setSpacing(30)
 
         # Иконка
-        icon_label = QLabel("📋")
-        icon_label.setStyleSheet("font-size: 80px;")
+        icon_label = QLabel("[КОПИЯ]")
+        icon_label.setStyleSheet(f"font-size: 32px; color: {Styles.TEXT_SECONDARY};")
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         content_layout.addWidget(icon_label)
 

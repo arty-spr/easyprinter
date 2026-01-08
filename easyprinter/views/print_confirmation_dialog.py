@@ -56,11 +56,13 @@ class PrintConfirmationDialog(QDialog):
         file_name = os.path.basename(self._file_path)
         ext = os.path.splitext(file_name)[1].lower()
 
-        icon = "📄"
+        icon = "[DOC]"
         if ext in ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif'):
-            icon = "🖼️"
+            icon = "[IMG]"
         elif ext in ('.docx', '.doc'):
-            icon = "📝"
+            icon = "[DOC]"
+        elif ext == '.pdf':
+            icon = "[PDF]"
 
         file_label = QLabel(f"{icon}  {file_name}")
         file_label.setStyleSheet(f"""
@@ -80,7 +82,7 @@ class PrintConfirmationDialog(QDialog):
         else:
             copies_text = f"{copies} копий"
             
-        copies_label = QLabel(f"📋  {copies_text}")
+        copies_label = QLabel(f"Копий: {copies_text}")
         copies_label.setStyleSheet(f"""
             font-size: {Styles.FONT_SIZE_NORMAL}px;
             color: {Styles.TEXT_PRIMARY};
@@ -95,7 +97,7 @@ class PrintConfirmationDialog(QDialog):
             PaperSize.A5: "А5",
         }
         paper_name = paper_names.get(self._settings.paper_size, "А4")
-        paper_label = QLabel(f"📐  Бумага: {paper_name}")
+        paper_label = QLabel(f"Бумага: {paper_name}")
         paper_label.setStyleSheet(f"""
             font-size: {Styles.FONT_SIZE_NORMAL}px;
             color: {Styles.TEXT_PRIMARY};
@@ -134,7 +136,7 @@ class PrintConfirmationDialog(QDialog):
         buttons_layout.addStretch()
 
         # Кнопка "Печатать"
-        print_btn = QPushButton("✓ Да, печатать!")
+        print_btn = QPushButton("Да, печатать!")
         print_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {Styles.SUCCESS_COLOR};

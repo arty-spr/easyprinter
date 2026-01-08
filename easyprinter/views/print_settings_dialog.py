@@ -37,7 +37,7 @@ class PrintSettingsDialog(QDialog):
         main_layout.setContentsMargins(30, 30, 30, 30)
 
         # Заголовок
-        title = QLabel("⚙️ Настройки печати")
+        title = QLabel("Настройки печати")
         title.setStyleSheet(f"""
             font-size: {Styles.FONT_SIZE_TITLE}px;
             font-weight: bold;
@@ -126,8 +126,8 @@ class PrintSettingsDialog(QDialog):
 
         self._orientation_combo = QComboBox()
         self._orientation_combo.addItems([
-            "📄 Книжная (вертикально)",
-            "📄 Альбомная (горизонтально)"
+            "Книжная (вертикально)",
+            "Альбомная (горизонтально)"
         ])
         self._orientation_combo.setFixedWidth(280)
         orient_layout.addWidget(self._orientation_combo)
@@ -263,7 +263,7 @@ class PrintSettingsDialog(QDialog):
 
         buttons_layout.addStretch()
 
-        save_btn = QPushButton("✓ Сохранить")
+        save_btn = QPushButton("Сохранить")
         save_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {Styles.SUCCESS_COLOR};

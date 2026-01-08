@@ -33,8 +33,8 @@ class DropZone(QFrame):
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.setSpacing(15)
 
-        icon_label = QLabel("📄")
-        icon_label.setStyleSheet("font-size: 80px; background: transparent;")
+        icon_label = QLabel("[ФАЙЛ]")
+        icon_label.setStyleSheet(f"font-size: 32px; background: transparent; color: {Styles.TEXT_SECONDARY};")
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(icon_label)
 
@@ -140,16 +140,16 @@ class HomePage(QWidget):
         nav_grid = QGridLayout()
         nav_grid.setSpacing(25)
 
-        print_btn = self._create_nav_button("🖨️\nПЕЧАТЬ", Styles.PRIMARY_COLOR, self.navigate_to_print.emit)
+        print_btn = self._create_nav_button("ПЕЧАТЬ", Styles.PRIMARY_COLOR, self.navigate_to_print.emit)
         nav_grid.addWidget(print_btn, 0, 0)
 
-        scan_btn = self._create_nav_button("📷\nСКАН", Styles.SUCCESS_COLOR, self.navigate_to_scan.emit)
+        scan_btn = self._create_nav_button("СКАН", Styles.SUCCESS_COLOR, self.navigate_to_scan.emit)
         nav_grid.addWidget(scan_btn, 0, 1)
 
-        copy_btn = self._create_nav_button("📋\nКОПИЯ", Styles.WARNING_COLOR, self.navigate_to_copy.emit)
+        copy_btn = self._create_nav_button("КОПИЯ", Styles.WARNING_COLOR, self.navigate_to_copy.emit)
         nav_grid.addWidget(copy_btn, 1, 0)
 
-        status_btn = self._create_nav_button("📊\nСТАТУС", Styles.PURPLE_COLOR, self.navigate_to_status.emit)
+        status_btn = self._create_nav_button("СТАТУС", Styles.PURPLE_COLOR, self.navigate_to_status.emit)
         nav_grid.addWidget(status_btn, 1, 1)
 
         nav_container = QWidget()
@@ -159,7 +159,7 @@ class HomePage(QWidget):
         layout.addSpacing(20)
 
         # Кнопка настроек
-        settings_btn = QPushButton("⚙️  Настройки")
+        settings_btn = QPushButton("Настройки")
         settings_btn.setFixedSize(250, 70)
         settings_btn.setStyleSheet(f"""
             QPushButton {{

@@ -15,5 +15,8 @@ python-docx>=1.1.0
 # Дополнительные утилиты
 numpy>=1.24.0
 
+# Windows API (для печати без PowerShell окон) - только для Windows
+pywin32>=306; sys_platform == "win32"
+
 # Сборка exe
 pyinstaller>=6.0.0

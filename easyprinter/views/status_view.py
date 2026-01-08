@@ -142,15 +142,15 @@ class StatusView(QWidget):
         capabilities_group = QGroupBox("Возможности")
         capabilities_layout = QHBoxLayout(capabilities_group)
 
-        self._print_capability = QLabel("✓ Печать")
+        self._print_capability = QLabel("[+] Печать")
         self._print_capability.setStyleSheet(f"color: {Styles.SUCCESS_COLOR}; font-size: 16px;")
         capabilities_layout.addWidget(self._print_capability)
 
-        self._scan_capability = QLabel("✓ Сканирование")
+        self._scan_capability = QLabel("[+] Сканирование")
         self._scan_capability.setStyleSheet(f"color: {Styles.SUCCESS_COLOR}; font-size: 16px;")
         capabilities_layout.addWidget(self._scan_capability)
 
-        self._copy_capability = QLabel("✓ Копирование")
+        self._copy_capability = QLabel("[+] Копирование")
         self._copy_capability.setStyleSheet(f"color: {Styles.SUCCESS_COLOR}; font-size: 16px;")
         capabilities_layout.addWidget(self._copy_capability)
 

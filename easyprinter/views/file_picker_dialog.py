@@ -20,16 +20,16 @@ class FilePickerDialog(QDialog):
     """Упрощённый диалог выбора файла"""
 
     SUPPORTED_EXTENSIONS = {
-        '.pdf': ('📄', 'PDF документ'),
-        '.docx': ('📝', 'Word документ'),
-        '.doc': ('📝', 'Word документ'),
-        '.jpg': ('🖼️', 'Изображение'),
-        '.jpeg': ('🖼️', 'Изображение'),
-        '.png': ('🖼️', 'Изображение'),
-        '.bmp': ('🖼️', 'Изображение'),
-        '.tiff': ('🖼️', 'Изображение'),
-        '.tif': ('🖼️', 'Изображение'),
-        '.gif': ('🖼️', 'Изображение'),
+        '.pdf': ('[PDF]', 'PDF документ'),
+        '.docx': ('[DOC]', 'Word документ'),
+        '.doc': ('[DOC]', 'Word документ'),
+        '.jpg': ('[IMG]', 'Изображение'),
+        '.jpeg': ('[IMG]', 'Изображение'),
+        '.png': ('[IMG]', 'Изображение'),
+        '.bmp': ('[IMG]', 'Изображение'),
+        '.tiff': ('[IMG]', 'Изображение'),
+        '.tif': ('[IMG]', 'Изображение'),
+        '.gif': ('[IMG]', 'Изображение'),
     }
 
     def __init__(self, parent=None):
@@ -66,9 +66,9 @@ class FilePickerDialog(QDialog):
 
         # Кнопки быстрого доступа
         folders = [
-            ("🏠 Рабочий стол", self._get_desktop_path()),
-            ("📁 Документы", str(Path.home() / "Documents")),
-            ("📥 Загрузки", str(Path.home() / "Downloads")),
+            ("Рабочий стол", self._get_desktop_path()),
+            ("Документы", str(Path.home() / "Documents")),
+            ("Загрузки", str(Path.home() / "Downloads")),
         ]
 
         for name, path in folders:
@@ -97,7 +97,7 @@ class FilePickerDialog(QDialog):
         layout.addWidget(quick_access)
 
         # Недавние файлы
-        recent_label = QLabel("📋 Недавние файлы:")
+        recent_label = QLabel("Недавние файлы:")
         recent_label.setStyleSheet(f"""
             font-size: {Styles.FONT_SIZE_LARGE}px;
             font-weight: bold;
@@ -139,7 +139,7 @@ class FilePickerDialog(QDialog):
         buttons_layout.setSpacing(20)
 
         # Кнопка "Найти в папках"
-        browse_btn = QPushButton("📂 Найти в папках...")
+        browse_btn = QPushButton("Найти в папках...")
         browse_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {Styles.TEXT_SECONDARY};
@@ -179,7 +179,7 @@ class FilePickerDialog(QDialog):
         buttons_layout.addWidget(cancel_btn)
 
         # Кнопка "Выбрать"
-        self._select_btn = QPushButton("✓ Выбрать этот файл")
+        self._select_btn = QPushButton("Выбрать этот файл")
         self._select_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {Styles.SUCCESS_COLOR};
@@ -234,7 +234,7 @@ class FilePickerDialog(QDialog):
             if len(folder) > 50:
                 folder = "..." + folder[-47:]
 
-            item = QListWidgetItem(f"{icon}  {file_name}\n      📁 {folder}")
+            item = QListWidgetItem(f"{icon}  {file_name}\n      {folder}")
             item.setData(Qt.ItemDataRole.UserRole, file_path)
             item.setSizeHint(QSize(0, 70))
             self._recent_list.addItem(item)

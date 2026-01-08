@@ -102,55 +102,73 @@ class ScannerService:
         """Сканирование на Windows через WIA"""
         self._notify_progress("Запуск сканирования (Windows WIA)...", 30)
 
+        # Скрываем окно PowerShell
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+
         # Создаём временный файл для сохранения скана
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix='.bmp', delete=False) as tmp:
             tmp_path = tmp.name
 
         try:
             # PowerShell скрипт для сканирования через WIA
             dpi = settings.resolution.value
+            tmp_path_escaped = tmp_path.replace('\\', '\\\\')
+
             ps_script = f'''
-Add-Type -AssemblyName System.Drawing
+$ErrorActionPreference = "Stop"
 
-$deviceManager = New-Object -ComObject WIA.DeviceManager
-$device = $null
+try {{
+    $deviceManager = New-Object -ComObject WIA.DeviceManager
+    $device = $null
 
-foreach ($d in $deviceManager.DeviceInfos) {{
-    if ($d.Type -eq 1) {{  # Scanner
-        $device = $d.Connect()
-        break
+    foreach ($d in $deviceManager.DeviceInfos) {{
+        if ($d.Type -eq 1) {{
+            $device = $d.Connect()
+            break
+        }}
     }}
-}}
 
-if ($device -eq $null) {{
-    Write-Error "Сканер не найден"
+    if ($device -eq $null) {{
+        Write-Error "SCANNER_NOT_FOUND"
+        exit 1
+    }}
+
+    $item = $device.Items[1]
+
+    # Настройки
+    try {{ $item.Properties["6146"].Value = 2 }} catch {{}}
+    try {{ $item.Properties["6147"].Value = {dpi} }} catch {{}}
+    try {{ $item.Properties["6148"].Value = {dpi} }} catch {{}}
+
+    # Сканирование
+    $imageFile = $item.Transfer()
+    $imageFile.SaveFile("{tmp_path_escaped}")
+    Write-Output "SUCCESS"
+}} catch {{
+    Write-Error $_.Exception.Message
     exit 1
 }}
-
-$item = $device.Items[1]
-
-# Настройки разрешения
-$item.Properties["6146"].Value = 2  # Color
-$item.Properties["6147"].Value = {dpi}  # Horizontal DPI
-$item.Properties["6148"].Value = {dpi}  # Vertical DPI
-
-# Сканирование
-$imageFile = $item.Transfer()
-$imageFile.SaveFile("{tmp_path.replace(chr(92), chr(92)+chr(92))}")
 '''
 
             result = subprocess.run(
-                ["powershell", "-Command", ps_script],
+                ["powershell", "-WindowStyle", "Hidden", "-Command", ps_script],
                 capture_output=True,
                 text=True,
-                timeout=120
+                timeout=120,
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NO_WINDOW
             )
 
-            if result.returncode != 0 or not os.path.exists(tmp_path):
-                # Если WIA не сработал, пробуем через wiaaut.dll
-                return self._scan_windows_fallback(settings)
-
-            return Image.open(tmp_path)
+            if result.returncode == 0 and os.path.exists(tmp_path) and os.path.getsize(tmp_path) > 0:
+                image = Image.open(tmp_path)
+                return image.copy()  # Копируем чтобы можно было удалить файл
+            else:
+                error_msg = result.stderr.strip() if result.stderr else "Неизвестная ошибка"
+                if "SCANNER_NOT_FOUND" in error_msg:
+                    raise RuntimeError("Сканер не найден. Проверьте подключение.")
+                raise RuntimeError(f"Ошибка сканирования: {error_msg}")
 
         finally:
             try:
@@ -158,12 +176,6 @@ $imageFile.SaveFile("{tmp_path.replace(chr(92), chr(92)+chr(92))}")
                     os.unlink(tmp_path)
             except Exception:
                 pass
-
-    def _scan_windows_fallback(self, settings: ScanSettings) -> Optional[Image.Image]:
-        """Запасной метод сканирования на Windows"""
-        # Открываем стандартное приложение сканирования Windows
-        subprocess.run(["start", "ms-screenclip:"], shell=True, timeout=5)
-        raise RuntimeError("Автоматическое сканирование недоступно. Используйте стандартное приложение Windows для сканирования.")
 
     def _scan_macos(self, settings: ScanSettings) -> Optional[Image.Image]:
         """Сканирование на macOS через Image Capture / SANE"""
@@ -283,7 +295,11 @@ $imageFile.SaveFile("{tmp_path.replace(chr(92), chr(92)+chr(92))}")
 
         try:
             if system == "Windows":
-                # Используем WIA для получения списка сканеров
+                # Скрываем окно PowerShell
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+
                 ps_script = '''
 $deviceManager = New-Object -ComObject WIA.DeviceManager
 foreach ($d in $deviceManager.DeviceInfos) {
@@ -293,16 +309,17 @@ foreach ($d in $deviceManager.DeviceInfos) {
 }
 '''
                 result = subprocess.run(
-                    ["powershell", "-Command", ps_script],
+                    ["powershell", "-WindowStyle", "Hidden", "-Command", ps_script],
                     capture_output=True,
                     text=True,
-                    timeout=10
+                    timeout=10,
+                    startupinfo=startupinfo,
+                    creationflags=subprocess.CREATE_NO_WINDOW
                 )
                 if result.returncode == 0:
                     scanners = [s.strip() for s in result.stdout.strip().split('\n') if s.strip()]
 
             elif system in ("Darwin", "Linux"):
-                # Используем SANE
                 result = subprocess.run(
                     ["scanimage", "-L"],
                     capture_output=True,
@@ -312,7 +329,6 @@ foreach ($d in $deviceManager.DeviceInfos) {
                 if result.returncode == 0:
                     for line in result.stdout.strip().split('\n'):
                         if line.strip():
-                            # Формат: device `name' is a Vendor Model Type
                             if '`' in line and "'" in line:
                                 start = line.index('`') + 1
                                 end = line.index("'")

@@ -97,7 +97,7 @@ class PrintView(QWidget):
 
         header_layout.addStretch()
 
-        title_label = QLabel("🖨️ ПЕЧАТЬ")
+        title_label = QLabel("ПЕЧАТЬ")
         title_font = QFont()
         title_font.setPointSize(Styles.FONT_SIZE_TITLE)
         title_font.setBold(True)
@@ -124,7 +124,7 @@ class PrintView(QWidget):
         main_layout.addLayout(content_layout)
 
         # Кнопка печати
-        self._print_btn = QPushButton("🖨️  НАПЕЧАТАТЬ")
+        self._print_btn = QPushButton("НАПЕЧАТАТЬ")
         self._print_btn.setFixedHeight(100)
         self._print_btn.setStyleSheet(f"""
             QPushButton {{
@@ -154,6 +154,7 @@ class PrintView(QWidget):
 
         # Информация о файле
         self._file_info_label = QLabel("Файл не выбран")
+        self._file_info_label.setWordWrap(True)
         self._file_info_label.setStyleSheet(f"""
             font-size: {Styles.FONT_SIZE_LARGE}px;
             color: {Styles.TEXT_SECONDARY};
@@ -244,7 +245,7 @@ class PrintView(QWidget):
         layout.addSpacing(10)
 
         # Кнопка выбора файла
-        select_btn = QPushButton("📂  Выбрать файл")
+        select_btn = QPushButton("Выбрать файл")
         select_btn.setFixedHeight(80)
         select_btn.setStyleSheet(f"""
             QPushButton {{
@@ -276,7 +277,7 @@ class PrintView(QWidget):
         layout.addWidget(self._copies_label)
 
         # Кнопка настроек печати
-        settings_btn = QPushButton("⚙️  Настройки печати")
+        settings_btn = QPushButton("Настройки печати")
         settings_btn.setFixedHeight(70)
         settings_btn.setStyleSheet(f"""
             QPushButton {{
@@ -334,7 +335,7 @@ class PrintView(QWidget):
 
         self._current_file = file_path
         file_name = os.path.basename(file_path)
-        self._file_info_label.setText(f"📄 {file_name}")
+        self._file_info_label.setText(file_name)
         logger.info(f"Загружен файл: {file_path}")
 
         # Добавляем в недавние файлы
@@ -512,7 +513,7 @@ class PrintView(QWidget):
     def _start_printing(self):
         """Начать печать"""
         self._print_btn.setEnabled(False)
-        self._print_btn.setText("⏳ Печатаем...")
+        self._print_btn.setText("Печатаем...")
 
         self._print_worker = PrintWorker(self._printer_service, self._current_file, self._settings)
         self._print_worker.finished.connect(self._on_print_finished)
@@ -522,7 +523,7 @@ class PrintView(QWidget):
     def _on_print_finished(self, success: bool, message: str):
         """Обработчик завершения печати"""
         self._print_btn.setEnabled(True)
-        self._print_btn.setText("🖨️  НАПЕЧАТАТЬ")
+        self._print_btn.setText("НАПЕЧАТАТЬ")
 
         if success:
             logger.info("Печать успешно отправлена")

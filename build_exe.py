@@ -21,31 +21,31 @@ def main():
     # Проверяем наличие PyInstaller
     try:
         import PyInstaller
-        print(f"✓ PyInstaller найден: версия {PyInstaller.__version__}")
+        print(f"[OK] PyInstaller найден: версия {PyInstaller.__version__}")
     except ImportError:
-        print("⚙ Установка PyInstaller...")
+        print("[...] Установка PyInstaller...")
         result = subprocess.run(
             [sys.executable, "-m", "pip", "install", "pyinstaller"],
             capture_output=True
         )
         if result.returncode != 0:
-            print("✗ Не удалось установить PyInstaller")
+            print("[X] Не удалось установить PyInstaller")
             sys.exit(1)
-        print("✓ PyInstaller установлен")
+        print("[OK] PyInstaller установлен")
 
     # Путь к главному файлу
     main_file = "main.py"
     if not os.path.exists(main_file):
-        print(f"✗ Файл {main_file} не найден!")
+        print(f"[X] Файл {main_file} не найден!")
         print("  Убедитесь, что запускаете скрипт из папки проекта")
         sys.exit(1)
 
-    print(f"✓ Найден главный файл: {main_file}")
+    print(f"[OK] Найден главный файл: {main_file}")
 
     # Очищаем предыдущие сборки
     for folder in ["build", "dist"]:
         if os.path.exists(folder):
-            print(f"⚙ Удаление папки {folder}...")
+            print(f"[...] Удаление папки {folder}...")
             shutil.rmtree(folder)
 
     # Удаляем старый spec файл
@@ -84,7 +84,7 @@ def main():
     ]
 
     print()
-    print("⚙ Запуск сборки...")
+    print("[...] Запуск сборки...")
     print("  Это может занять несколько минут...")
     print()
 
@@ -100,8 +100,8 @@ def main():
             print("              СБОРКА УСПЕШНА!")
             print("=" * 60)
             print()
-            print(f"  📁 Файл: {os.path.abspath(exe_path)}")
-            print(f"  📊 Размер: {size_mb:.1f} МБ")
+            print(f"  Файл: {os.path.abspath(exe_path)}")
+            print(f"  Размер: {size_mb:.1f} МБ")
             print()
             print("  Теперь вы можете:")
             print("  1. Скопировать exe-файл в любую папку")
@@ -110,7 +110,7 @@ def main():
             print()
             print("=" * 60)
         else:
-            print("✗ Exe-файл не найден после сборки")
+            print("[X] Exe-файл не найден после сборки")
             sys.exit(1)
     else:
         print("=" * 60)

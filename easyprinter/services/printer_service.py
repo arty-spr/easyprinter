@@ -38,19 +38,41 @@ class PrinterService:
 
     def _print_pdf_windows(self, file_path: str, printer: str, settings: PrintSettings) -> None:
         """Печать PDF на Windows"""
-        # Используем SumatraPDF для печати (если установлен) или Adobe Reader
-        # Альтернатива: используем PowerShell с Start-Process
+        import sys
 
-        args = [
-            "powershell", "-Command",
-            f'Start-Process -FilePath "{file_path}" -Verb Print -PassThru | '
-            f'ForEach-Object {{ Start-Sleep -Seconds 5; Stop-Process -Id $_.Id -Force }}'
-        ]
+        # Скрываем окно PowerShell
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
 
-        # Для более точной печати можно использовать:
-        # args = ["SumatraPDF.exe", "-print-to", printer, "-print-settings", f"{settings.copies}x", file_path]
+        # Используем win32api для печати напрямую если доступно
+        try:
+            import win32api
+            import win32print
 
-        subprocess.run(args, timeout=60)
+            # Устанавливаем принтер по умолчанию временно
+            win32print.SetDefaultPrinter(printer)
+
+            # Печатаем файл
+            for _ in range(settings.copies):
+                win32api.ShellExecute(0, "print", file_path, None, ".", 0)
+            return
+        except ImportError:
+            pass  # win32api не установлен, используем PowerShell
+
+        # Fallback: PowerShell со скрытым окном
+        ps_command = f'''
+$file = "{file_path.replace(chr(92), chr(92)+chr(92))}"
+Start-Process -FilePath $file -Verb Print -WindowStyle Hidden
+Start-Sleep -Seconds 3
+'''
+
+        subprocess.run(
+            ["powershell", "-WindowStyle", "Hidden", "-Command", ps_command],
+            startupinfo=startupinfo,
+            timeout=60,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
 
     def _print_pdf_macos(self, file_path: str, printer: str, settings: PrintSettings) -> None:
         """Печать PDF на macOS"""
@@ -131,17 +153,31 @@ class PrinterService:
 
     def _print_image_windows(self, file_path: str, printer: str, settings: PrintSettings) -> None:
         """Печать изображения на Windows"""
-        # Используем mspaint для печати изображения
-        args = [
-            "powershell", "-Command",
-            f'Start-Process mspaint -ArgumentList \'"{file_path}"\' -Wait; '
-            f'Start-Sleep -Seconds 2'
-        ]
-        # Альтернативный способ через rundll32
-        # args = ["rundll32", "shimgvw.dll,ImageView_PrintTo", file_path, printer]
+        # Скрываем окно
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
 
+        # Пробуем win32api если доступен
+        try:
+            import win32api
+            import win32print
+
+            win32print.SetDefaultPrinter(printer)
+            for _ in range(settings.copies):
+                win32api.ShellExecute(0, "print", file_path, None, ".", 0)
+            return
+        except ImportError:
+            pass
+
+        # Fallback: через rundll32 (без окна)
         for _ in range(settings.copies):
-            subprocess.run(args, timeout=60)
+            subprocess.run(
+                ["rundll32", "shimgvw.dll,ImageView_PrintTo", f"/pt", file_path, printer],
+                startupinfo=startupinfo,
+                timeout=60,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
 
     def _print_image_macos(self, file_path: str, printer: str, settings: PrintSettings) -> None:
         """Печать изображения на macOS"""

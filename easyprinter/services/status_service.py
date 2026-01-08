@@ -89,12 +89,19 @@ class StatusService:
 
         try:
             if system == "Windows":
-                # Используем PowerShell для получения списка принтеров
+                # Скрываем окно PowerShell
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+
                 result = subprocess.run(
-                    ["powershell", "-Command", "Get-Printer | Select-Object -ExpandProperty Name"],
+                    ["powershell", "-WindowStyle", "Hidden", "-Command",
+                     "Get-Printer | Select-Object -ExpandProperty Name"],
                     capture_output=True,
                     text=True,
-                    timeout=10
+                    timeout=10,
+                    startupinfo=startupinfo,
+                    creationflags=subprocess.CREATE_NO_WINDOW
                 )
                 if result.returncode == 0:
                     printers = [p.strip() for p in result.stdout.strip().split('\n') if p.strip()]
@@ -185,12 +192,18 @@ class StatusService:
 
         try:
             if system == "Windows":
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+
                 result = subprocess.run(
-                    ["powershell", "-Command",
+                    ["powershell", "-WindowStyle", "Hidden", "-Command",
                      f"Get-Printer -Name '{printer_name}' | Select-Object -ExpandProperty PrinterStatus"],
                     capture_output=True,
                     text=True,
-                    timeout=10
+                    timeout=10,
+                    startupinfo=startupinfo,
+                    creationflags=subprocess.CREATE_NO_WINDOW
                 )
                 if result.returncode == 0:
                     status_str = result.stdout.strip().lower()
@@ -249,12 +262,18 @@ class StatusService:
 
         try:
             if system == "Windows":
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+
                 result = subprocess.run(
-                    ["powershell", "-Command",
+                    ["powershell", "-WindowStyle", "Hidden", "-Command",
                      f"(Get-PrintJob -PrinterName '{printer_name}' -ErrorAction SilentlyContinue | Measure-Object).Count"],
                     capture_output=True,
                     text=True,
-                    timeout=10
+                    timeout=10,
+                    startupinfo=startupinfo,
+                    creationflags=subprocess.CREATE_NO_WINDOW
                 )
                 if result.returncode == 0 and result.stdout.strip().isdigit():
                     return int(result.stdout.strip())
