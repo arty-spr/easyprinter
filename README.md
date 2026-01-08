@@ -1,76 +1,115 @@
-# EasyPrinter
+# EasyPrinter (Python версия)
 
-Простое GUI приложение для управления HP LaserJet Pro M1536dnf MFP.
+Приложение для управления принтером HP LaserJet M1536dnf MFP.
+
+Это порт оригинального приложения с C# WPF на Python с использованием PyQt6.
 
 ## Возможности
 
-- **Печать** - PDF и изображения с предпросмотром и настройками
-- **Сканирование** - в PDF, JPEG, PNG, TIFF с настройками яркости/контраста
-- **Копирование** - с настройкой количества копий и масштаба
-- **Статус принтера** - уровень тонера, очередь печати
+- **Печать** - PDF файлов и изображений (JPG, PNG, BMP, TIFF, GIF)
+- **Сканирование** - с возможностью сохранения в PDF, JPEG, PNG, TIFF
+- **Копирование** - быстрое копирование документов
+- **Мониторинг статуса** - отображение состояния принтера в реальном времени
 
 ## Требования
 
-- Windows 10 x64 или новее
-- .NET 6 Desktop Runtime
-- Git (для обновлений)
-- HP LaserJet M1536dnf MFP с установленными драйверами
+- Python 3.10 или новее
+- Windows 10/11, macOS или Linux
+- Установленные драйверы принтера HP LaserJet M1536dnf
+
+### Для сканирования
+
+- **Windows**: WIA (Windows Image Acquisition) - встроено в систему
+- **macOS/Linux**: SANE (Scanner Access Now Easy) - `brew install sane-backends` или `apt install sane`
 
 ## Установка
 
-### Первая установка
+1. Клонируйте репозиторий или перейдите в папку `python_version`
 
-1. Откройте PowerShell от имени администратора
-2. Выполните:
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process
-irm https://raw.githubusercontent.com/arty-spr/easyprinter/main/install.ps1 | iex
+2. Создайте виртуальное окружение:
+```bash
+python -m venv venv
 ```
 
-Или скачайте репозиторий и запустите `install.ps1` вручную.
+3. Активируйте виртуальное окружение:
+```bash
+# Windows
+venv\Scripts\activate
 
-### Обновление
+# macOS/Linux
+source venv/bin/activate
+```
 
-Запустите ярлык "Обновить EasyPrinter" или выполните:
-```powershell
-C:\ProgramData\EasyPrinter-src\update.ps1
+4. Установите зависимости:
+```bash
+pip install -r requirements.txt
+```
+
+## Запуск
+
+```bash
+python main.py
+```
+
+Или с использованием скрипта:
+```bash
+# Windows
+run.bat
+
+# macOS/Linux
+./run.sh
 ```
 
 ## Структура проекта
 
 ```
-EasyPrinter/
-├── src/EasyPrinter/
-│   ├── Views/          # UI страницы
-│   ├── ViewModels/     # MVVM ViewModels
-│   ├── Services/       # Сервисы (печать, сканирование, статус)
-│   ├── Models/         # Модели данных
-│   └── Resources/      # Стили и локализация
-├── install.ps1         # Установка
-├── update.ps1          # Обновление
-└── build.ps1           # Сборка
+python_version/
+├── main.py                 # Точка входа
+├── requirements.txt        # Зависимости
+├── README.md              # Документация
+├── run.bat                # Скрипт запуска (Windows)
+├── run.sh                 # Скрипт запуска (Unix)
+└── easyprinter/
+    ├── __init__.py
+    ├── models/            # Модели данных
+    │   ├── __init__.py
+    │   ├── image_adjustments.py
+    │   ├── print_settings.py
+    │   ├── printer_status.py
+    │   └── scan_settings.py
+    ├── services/          # Бизнес-логика
+    │   ├── __init__.py
+    │   ├── image_processing_service.py
+    │   ├── printer_service.py
+    │   ├── scanner_service.py
+    │   └── status_service.py
+    └── views/             # Пользовательский интерфейс
+        ├── __init__.py
+        ├── styles.py
+        ├── main_window.py
+        ├── home_page.py
+        ├── print_view.py
+        ├── scan_view.py
+        ├── copy_view.py
+        └── status_view.py
 ```
 
-## Настройки печати
+## Используемые библиотеки
 
-- Количество копий: 1-99
-- Размер бумаги: A4, Letter, Legal, A5
-- Качество: Черновик, Нормальное, Высокое (FastRes 1200)
-- Масштаб: 25-400%
-- Страниц на листе: 1, 2, 4, 6, 9, 16
-- Двусторонняя печать (ручной дуплекс)
+| Библиотека | Назначение |
+|-----------|-----------|
+| PyQt6 | GUI фреймворк |
+| Pillow | Обработка изображений |
+| PyMuPDF | Работа с PDF |
+| NumPy | Математические операции |
 
-## Настройки изображения
+## Отличия от C# версии
 
-- Яркость: -100% до +100%
-- Контрастность: -100% до +100%
-- Резкость: 0 до 100%
-- Гамма: 0.1 до 3.0
+- Использует PyQt6 вместо WPF
+- Кроссплатформенный (Windows, macOS, Linux)
+- Сканирование через WIA (Windows) или SANE (Unix)
+- Печать через системные команды (lpr/PowerShell)
 
 ## Лицензия
 
 MIT License
-
-## Автор
-
-Создано для упрощения работы с принтером HP LaserJet M1536dnf MFP.

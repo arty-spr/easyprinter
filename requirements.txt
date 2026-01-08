@@ -1,0 +1,16 @@
+# EasyPrinter - Зависимости Python
+
+# GUI Framework
+PyQt6>=6.5.0
+
+# Работа с изображениями
+Pillow>=10.0.0
+
+# Работа с PDF
+PyMuPDF>=1.23.0
+
+# Работа с Word документами (DOCX)
+python-docx>=1.1.0
+
+# Дополнительные утилиты
+numpy>=1.24.0
