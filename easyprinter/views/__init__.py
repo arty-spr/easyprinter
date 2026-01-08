@@ -10,6 +10,9 @@ from .copy_view import CopyView
 from .status_view import StatusView
 from .settings_view import SettingsView
 from .styles import Styles
+from .file_picker_dialog import FilePickerDialog
+from .print_settings_dialog import PrintSettingsDialog
+from .print_confirmation_dialog import PrintConfirmationDialog
 
 __all__ = [
     'MainWindow',
@@ -19,5 +22,8 @@ __all__ = [
     'CopyView',
     'StatusView',
     'SettingsView',
-    'Styles'
+    'Styles',
+    'FilePickerDialog',
+    'PrintSettingsDialog',
+    'PrintConfirmationDialog'
 ]

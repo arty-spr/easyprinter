@@ -8,6 +8,8 @@ from .printer_service import PrinterService
 from .scanner_service import ScannerService
 from .logger_service import LoggerService, logger
 from .update_service import UpdateService
+from .settings_storage import SettingsStorage, settings_storage, UserPreferences
+from .sound_service import SoundService, sound_service
 
 __all__ = [
     'ImageProcessingService',
@@ -16,5 +18,10 @@ __all__ = [
     'ScannerService',
     'LoggerService',
     'logger',
-    'UpdateService'
+    'UpdateService',
+    'SettingsStorage',
+    'settings_storage',
+    'UserPreferences',
+    'SoundService',
+    'sound_service'
 ]

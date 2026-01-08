@@ -15,6 +15,7 @@ from PIL import Image
 from .styles import Styles
 from ..models import ScanSettings, ScanResolution, ScanSource, PrintSettings
 from ..services import ScannerService, PrinterService, ImageProcessingService
+from ..services.sound_service import sound_service
 
 
 class CopyWorker(QThread):
@@ -152,7 +153,7 @@ class CopyView(QWidget):
         source_layout = QHBoxLayout()
         source_layout.addWidget(QLabel("Источник:"))
         self._source_combo = QComboBox()
-        self._source_combo.addItems(["Стекло сканера", "Автоподатчик (АПД)"])
+        self._source_combo.addItems(["Положить на стекло", "Стопка листов сверху"])
         self._source_combo.setFixedWidth(200)
         source_layout.addWidget(self._source_combo)
         source_layout.addStretch()
@@ -262,6 +263,8 @@ class CopyView(QWidget):
         self._progress_widget.setVisible(False)
 
         if success:
-            QMessageBox.information(self, "Успех", message)
+            sound_service.play_success()
+            QMessageBox.information(self, "Готово!", message)
         else:
+            sound_service.play_error()
             QMessageBox.warning(self, "Ошибка", f"Ошибка копирования: {message}")

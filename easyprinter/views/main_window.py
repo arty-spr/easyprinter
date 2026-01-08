@@ -67,6 +67,7 @@ class MainWindow(QMainWindow):
         self._home_page.navigate_to_copy.connect(lambda: self._show_page(3))
         self._home_page.navigate_to_status.connect(lambda: self._show_page(4))
         self._home_page.navigate_to_settings.connect(lambda: self._show_page(5))
+        self._home_page.quick_print_file.connect(self._on_quick_print)
 
         self._print_view = PrintView(self._printer_service, self._image_processing)
         self._print_view.navigate_back.connect(lambda: self._show_page(0))
@@ -101,7 +102,7 @@ class MainWindow(QMainWindow):
         """Создать статусную строку"""
         frame = QFrame()
         frame.setProperty("class", "statusbar")
-        frame.setFixedHeight(50)
+        frame.setFixedHeight(70)
         frame.setStyleSheet(f"""
             QFrame {{
                 background-color: {Styles.CARD_BACKGROUND};
@@ -167,6 +168,11 @@ class MainWindow(QMainWindow):
     def _show_page(self, index: int):
         """Показать страницу по индексу"""
         self._stack.setCurrentIndex(index)
+
+    def _on_quick_print(self, file_path: str):
+        """Обработчик быстрой печати с главной страницы"""
+        self._show_page(1)  # Переключаемся на страницу печати
+        self._print_view.load_file_for_print(file_path)
 
     def _on_status_changed(self, status: PrinterStatus):
         """Обработчик изменения статуса принтера"""

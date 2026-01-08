@@ -5,7 +5,7 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
     QPushButton, QLabel, QTextEdit, QFrame, QMessageBox,
-    QGroupBox, QProgressBar, QApplication
+    QGroupBox, QProgressBar, QApplication, QCheckBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QThread, pyqtSlot
 from PyQt6.QtGui import QFont, QTextCursor
@@ -108,6 +108,10 @@ class SettingsView(QWidget):
             }
         """)
 
+        # Вкладка "Общие"
+        general_tab = self._create_general_tab()
+        tab_widget.addTab(general_tab, "Общие")
+
         # Вкладка "Обновления"
         update_tab = self._create_update_tab()
         tab_widget.addTab(update_tab, "Обновления")
@@ -121,6 +125,40 @@ class SettingsView(QWidget):
         tab_widget.addTab(about_tab, "О программе")
 
         main_layout.addWidget(tab_widget)
+
+    def _create_general_tab(self) -> QWidget:
+        """Создать вкладку общих настроек"""
+        from ..services.settings_storage import settings_storage
+
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(25)
+        layout.setContentsMargins(30, 30, 30, 30)
+
+        # Звуки
+        sound_group = QGroupBox("Звуковые уведомления")
+        sound_layout = QVBoxLayout(sound_group)
+
+        self._sound_check = QCheckBox("Воспроизводить звуки")
+        self._sound_check.setChecked(settings_storage.preferences.sound_enabled)
+        self._sound_check.setStyleSheet(f"font-size: {Styles.FONT_SIZE_LARGE}px;")
+        self._sound_check.stateChanged.connect(self._on_sound_changed)
+        sound_layout.addWidget(self._sound_check)
+
+        sound_hint = QLabel("Звуки помогут понять, что действие выполнено")
+        sound_hint.setStyleSheet(f"color: {Styles.TEXT_SECONDARY}; font-size: {Styles.FONT_SIZE_NORMAL}px;")
+        sound_layout.addWidget(sound_hint)
+
+        layout.addWidget(sound_group)
+        layout.addStretch()
+
+        return widget
+
+    def _on_sound_changed(self, state: int):
+        """Обработчик изменения настройки звука"""
+        from ..services.settings_storage import settings_storage
+        settings_storage.preferences.sound_enabled = (state == Qt.CheckState.Checked.value)
+        settings_storage.save()
 
     def _create_update_tab(self) -> QWidget:
         """Создать вкладку обновлений"""

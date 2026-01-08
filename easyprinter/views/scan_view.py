@@ -18,6 +18,7 @@ from datetime import datetime
 from .styles import Styles
 from ..models import ScanSettings, ScanResolution, ScanFormat, ScanSource
 from ..services import ScannerService, ImageProcessingService, logger
+from ..services.sound_service import sound_service
 
 
 class ScanWorker(QThread):
@@ -59,10 +60,10 @@ class ScanView(QWidget):
 
     # DPI описания для подсказок
     DPI_DESCRIPTIONS = {
-        150: "Быстро, небольшой размер файла (~0.5 МБ)",
-        300: "Стандартное качество для документов (~2 МБ)",
-        600: "Высокое качество для фото (~8 МБ)",
-        1200: "Максимальное качество, большой файл (~30 МБ)"
+        150: "Быстро, маленький файл",
+        300: "Хорошее качество (рекомендуется)",
+        600: "Отличное качество для фотографий",
+        1200: "Максимальное качество"
     }
 
     def __init__(self, scanner_service: ScannerService, image_processing: ImageProcessingService, parent=None):
@@ -245,8 +246,8 @@ class ScanView(QWidget):
         scan_layout.addWidget(QLabel("Источник:"))
         self._source_combo = QComboBox()
         self._source_combo.addItems([
-            "Стекло сканера",
-            "Автоподатчик (АПД)"
+            "Положить на стекло",
+            "Стопка листов сверху"
         ])
         self._source_combo.currentIndexChanged.connect(self._update_settings)
         scan_layout.addWidget(self._source_combo)
@@ -257,10 +258,10 @@ class ScanView(QWidget):
 
         self._resolution_combo = QComboBox()
         self._resolution_combo.addItems([
-            "150 DPI - быстро",
-            "300 DPI - стандарт",
-            "600 DPI - высокое",
-            "1200 DPI - максимум"
+            "Быстрое сканирование",
+            "Хорошее качество",
+            "Высокое качество",
+            "Максимальное качество"
         ])
         self._resolution_combo.setCurrentIndex(1)
         self._resolution_combo.currentIndexChanged.connect(self._on_resolution_changed)
@@ -282,10 +283,10 @@ class ScanView(QWidget):
         save_layout.addWidget(QLabel("Формат файла:"))
         self._format_combo = QComboBox()
         self._format_combo.addItems([
-            "PDF - документ",
-            "JPEG - сжатое фото",
-            "PNG - без потерь",
-            "TIFF - архивный"
+            "PDF (для документов)",
+            "JPEG (для фотографий)",
+            "PNG (высокое качество)",
+            "TIFF (для архива)"
         ])
         self._format_combo.currentIndexChanged.connect(self._update_settings)
         save_layout.addWidget(self._format_combo)
@@ -475,6 +476,7 @@ class ScanView(QWidget):
         self._progress_widget.setVisible(False)
         self._placeholder_widget.setVisible(True)
         logger.error(f"Ошибка сканирования: {error}")
+        sound_service.play_error()
         QMessageBox.warning(self, "Ошибка сканирования", error)
 
     def _update_preview(self):
@@ -522,8 +524,9 @@ class ScanView(QWidget):
 
             output_path = self._scanner_service.save_scan(image_to_save, self._settings)
             logger.info(f"Скан сохранён: {output_path}")
+            sound_service.play_success()
             QMessageBox.information(
-                self, "Успех",
+                self, "Готово!",
                 f"Скан сохранён:\n{output_path}"
             )
 
@@ -532,4 +535,5 @@ class ScanView(QWidget):
 
         except Exception as e:
             logger.exception(f"Ошибка сохранения скана: {e}")
+            sound_service.play_error()
             QMessageBox.warning(self, "Ошибка", f"Не удалось сохранить скан: {e}")
